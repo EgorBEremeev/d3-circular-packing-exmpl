@@ -23,7 +23,7 @@
 <script>
 
 // set the dimensions and margins of the graph
-var width = 1000
+var width = 800
 var height = 600
 
 // append the svg object to the body of the page
@@ -33,7 +33,7 @@ var svg = d3.select("#my_dataviz")
     .attr("height", height)
 
 // Read data
-d3.csv("https://raw.githubusercontent.com/EgorBEremeev/d3-circular-packing-exmpl/0e33850e7fe01236ffb7ba58d11696f29d736e61/VizData.csv", function(data) {
+d3.csv("https://raw.githubusercontent.com/EgorBEremeev/d3-circular-packing-exmpl/master/VizData.csv", function(data) {
 
   // sort the nodes so that the bigger ones are at the back
   data = data.sort(function(a,b){ return b["value"] - a["value"]; });
@@ -52,7 +52,7 @@ var subCatList = ["Фонды", "Кандидат в МГД", "СМИ", "Пол�
 // A scale that gives a X target position for each group
 var x = d3.scaleOrdinal()
   .domain(subCatList)
-  .range([200, 400, 600, 800])
+  .range([160, 320, 480, 540])
 	
   // Color palette for subcategories
   var colorSubCat = d3.scaleOrdinal()
@@ -61,8 +61,8 @@ var x = d3.scaleOrdinal()
 
   // Size scale for countries
   var size = d3.scaleLinear()
-    .domain([0, 9000])
-    .range([40,175])  // circle will be between 7 and 55 px wide
+    .domain([0, 30000])
+    .range([50,150])  // circle will be between 7 and 55 px wide
   
 
   // Draw circles and texts for the nodes
@@ -111,10 +111,10 @@ svg.append("text")
     .text("Финансирование пенсии в 2019 году");
 
 svg.append("text")
-	.attr("x", 500)
+	.attr("x", 300)
     .attr("y", 0)
 	.attr("text-anchor", "right")
-    .attr("dy", "1.5em")
+    .attr("dy", "2.5em")
 	.style("font-size","4em")
 	.style("font-weight", "bold")
 	.style("fill", "#FF0000")
@@ -150,9 +150,9 @@ legendSubCategory.append("text")
 //-----Legend------>
   // Features of the forces applied to the nodes:
   var simulation = d3.forceSimulation()
-      .force("forceX", d3.forceX().strength(.1).x( function(d){ return x(d.subcategory) }))
-      .force("forceY", d3.forceY().strength(.1).y(height * .5))
-      .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
+      .force("forceX", d3.forceX().strength(.2).x( function(d){ return x(d.subcategory) }))
+      .force("forceY", d3.forceY().strength(.1).y(height * .65))
+      //.force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
       .force("charge", d3.forceManyBody().strength(-5)) // Nodes are attracted one each other of value is > 0
       .force("collide", d3.forceCollide().strength(.1).radius(function(d){ return (size(d.value)+3) }).iterations(1)) // Force that avoids circle overlapping
 
