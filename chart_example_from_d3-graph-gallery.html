@@ -8,6 +8,7 @@
 <!-- Color palette -->
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 
+
 <!-- Create a div where the graph will take place -->
 <div id="my_dataviz"></div>
 
@@ -32,53 +33,39 @@ var svg = d3.select("#my_dataviz")
     .attr("height", height)
 
 // Read data
-d3.csv("https://raw.githubusercontent.com/EgorBEremeev/d3-circular-packing-exmpl/master/VizData.csv", function(data) {
+d3.csv("https://raw.githubusercontent.com/EgorBEremeev/d3-circular-packing-exmpl/0e33850e7fe01236ffb7ba58d11696f29d736e61/VizData.csv", function(data) {
 
   // sort the nodes so that the bigger ones are at the back
   data = data.sort(function(a,b){ return b["value"] - a["value"]; });
+  
+  var totals = d3.sum(data, function(d){ return d["value"]; });
+	
+console.log(totals)
 
-  // Color palette for continents?
-  var color = d3.scaleOrdinal()
-    .domain(["Благотворительность", "Политическая деятельность"])
+  // Color palette for categories
+  var colorCat = d3.scaleOrdinal()
+    .domain(["Благотворительность", "Политическая деятельность", "Налоги"])
+    .range(d3.schemeSet1);
+
+var subCatList = ["Фонды", "Кандидат в МГД", "СМИ", "Политические партии","ПФР"]
+
+// A scale that gives a X target position for each group
+var x = d3.scaleOrdinal()
+  .domain(subCatList)
+  .range([200, 400, 600, 800])
+	
+  // Color palette for subcategories
+  var colorSubCat = d3.scaleOrdinal()
+    .domain(subCatList)
     .range(d3.schemeSet1);
 
   // Size scale for countries
   var size = d3.scaleLinear()
     .domain([0, 9000])
-    .range([30,150])  // circle will be between 7 and 55 px wide
-
-  // create a tooltip
-  var Tooltip = d3.select("#my_dataviz")
-    .append("div")
-    .style("opacity", 0)
-    .attr("class", "tooltip")
-    .style("background-color", "white")
-    .style("border", "solid")
-    .style("border-width", "2px")
-    .style("border-radius", "5px")
-    .style("padding", "5px")
-
-  // Three function that change the tooltip when user hover / move / leave a cell
-  var mouseover = function(d) {
-    Tooltip
-      .style("opacity", 1)
-  }
-  var mousemove = function(d) {
-    Tooltip
-      .html('<u>' + d.key + '</u>' + "<br>" + d.value + " рублей")
-      .style("left", (d3.mouse(this)[0]+20) + "px")
-      .style("top", (d3.mouse(this)[1]) + "px")
-  }
-  var mouseleave = function(d) {
-    Tooltip
-      .style("opacity", 0)
-  }
+    .range([40,175])  // circle will be between 7 and 55 px wide
   
 
   // Draw circles and texts for the nodes
-	
-//  var nodes = svg.append("g")
-//    .attr("class", "nodes");
 
   var node = svg.selectAll("node")
     .data(data)
@@ -89,13 +76,10 @@ d3.csv("https://raw.githubusercontent.com/EgorBEremeev/d3-circular-packing-exmpl
     .attr("r", function(d){ return size(d.value)})
 	.attr("cx",0)
     .attr("cy", 0)
-    .style("fill", function(d){ return color(d.category)})
+    .style("fill", function(d){ return colorSubCat(d.subcategory)})
      .style("fill-opacity", 0.8)
       .attr("stroke", "black")
       .style("stroke-width", 1)
-      .on("mouseover", mouseover) // What to do when hovered
-      .on("mousemove", mousemove)
-      .on("mouseleave", mouseleave)
       .call(d3.drag() // call specific function when circle is dragged
            .on("start", dragstarted)
            .on("drag", dragged)
@@ -108,23 +92,68 @@ d3.csv("https://raw.githubusercontent.com/EgorBEremeev/d3-circular-packing-exmpl
     .attr("text-anchor", "middle")
 	.style("font-size","1.66em")
 	.style("font-weight", "bold")
-	.style("fill", "#FF4669");
+//	.style("fill", "#FF4669");
 
 
   var text = node.append("text")
     .text(function(d){ return d.key})
-    .attr("y", "1em")
+    .attr("y", "1.3em")
     .attr("text-anchor", "middle")
 	.attr("wrap_wide", function(d){ return 2*size(d.value)})
 	.call(wrap);
+	
+svg.append("text")
+	.attr("x", 50)
+    .attr("y", 0)
+    .attr("dy", "1em")
+	.style("font-size","2em")
+	.style("font-weight", "bold")
+    .text("Финансирование пенсии в 2019 году");
 
+svg.append("text")
+	.attr("x", 500)
+    .attr("y", 0)
+	.attr("text-anchor", "right")
+    .attr("dy", "1.5em")
+	.style("font-size","4em")
+	.style("font-weight", "bold")
+	.style("fill", "#FF0000")
+    .text( totals.toLocaleString('ru-RU') + " руб." );
 
+//<-----Legend---------
+
+var legendSubCategory = svg.append("g")
+    .attr("class", "legend")
+    .attr("width", 300)
+    .attr("height", height)
+   .selectAll(".legend-parties-item")
+    .data(subCatList) //Changed this line from your code
+   .enter()
+    .append("g")
+    .attr("class", "legend-parties-item");
+
+legendSubCategory.append("rect")
+    .attr("x", 50)
+    .attr("y", function(d, i) { return 3.5 + i * 1.5 + "em"; })
+    .attr("width", 18)
+    .attr("height", 18)
+    .style("opacity", 0.8)
+    .style("fill", function(d){ return colorSubCat(d)});
+
+legendSubCategory.append("text")
+    .attr("x", 80)
+    .attr("y", function(d, i) { return 3.5 + i * 1.5 + "em"; })
+    .attr("dy", "0.9em")
+    .style("opacity", 0.8)
+    .text(function(d) { return d; });
+	
+//-----Legend------>
   // Features of the forces applied to the nodes:
   var simulation = d3.forceSimulation()
- //     .force("forceX", d3.forceX().strength(.1).x(width * .5))
+      .force("forceX", d3.forceX().strength(.1).x( function(d){ return x(d.subcategory) }))
       .force("forceY", d3.forceY().strength(.1).y(height * .5))
       .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
-      .force("charge", d3.forceManyBody().strength(-15)) // Nodes are attracted one each other of value is > 0
+      .force("charge", d3.forceManyBody().strength(-5)) // Nodes are attracted one each other of value is > 0
       .force("collide", d3.forceCollide().strength(.1).radius(function(d){ return (size(d.value)+3) }).iterations(1)) // Force that avoids circle overlapping
 
   // Apply these forces to the nodes and update their positions.
